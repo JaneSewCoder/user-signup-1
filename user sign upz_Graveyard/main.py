@@ -17,45 +17,67 @@ app.config['DEBUG'] = True
 def sign_up_form():
     return render_template('sign_up_form.html')
 
+def is_entered(text):
+    try:
+        str(text)
+        return True
+    except ValueError:
+        return False
+
 @app.route('/', methods=['POST'])
 def validate_signup():
     username = request.form['username']
     password = request.form['password']
     password_verify = request.form['password_verify']
     email = request.form['email']
+    password_length = len(password)
+    email_length = len(email)
 
     username_error = ''
     password_error = ''
     password_verify_error = ''
     email_error = ''
 
-    if len(username) <= 3 or len(username) >= 20: 
-        username_error = 'Please enter a valid username.'
+    if len(username) >= 3 or len(username) <= 20: 
+        username_error = 'Please enter a username.'
+    else:
+        username_error =''
     
-    if len(password) == 0: 
+    if not is_entered(password): 
         password_error = 'Please enter a password.'
-    elif len(password) <= 3 and len(password) >= 20:
-        password_error = "Password must be 3 to 20 characters in length."
+    else:
+        if password_length >= 3 and password_length <= 20:
+           password_error = "Password must be 3 to 20 characters in length."
+           password_error = ''
     
-    if password_verify != password:
-        password_verify_error = "Passwords do not match."
+    if not is_entered(password_verify): 
+        password_verify_error = 'Please reenter your password.'
+    else:
+        if password_verify != password:
+            password_verify_error = "Passwords do not match."
+            password_verify_error = ''
 
-    if len(email) > 0:
-        if '@' not in email and '.' not in email:
+    if not is_entered(email):
+        email_error = ''
+    else:
+        if email_length >= 3 and email_length <= 20 or '@' not in email and '.' not in email:
             email_error = "Please enter a valid email."
 
     if not username_error and not password_error and not password_verify_error and not email_error:
         # do i need to add the welcome copy here?
-        return render_template('welcome.html', username=username)
+        return redirect('/valid_sign_up')
     else:
         return render_template('sign_up_form.html', username_error=username_error, 
         password_error=password_error, 
         password_verify_error=password_verify_error, 
-        email_error=email_error)
+        email_error=password_verify_error)
     
+    return render_template('sign_up_form.html')
+
 @app.route('/valid_sign_up')
 def valid_sign_up():
-    username = request.args.get('username') 
-    return render_template('welcome.html', username=username) #, username=username
+    username = request.form('username')
+    #request.args.get instead on line above?
+    return render_template('welcome.html', username=username)
 
 app.run()
